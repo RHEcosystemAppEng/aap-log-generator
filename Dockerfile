@@ -21,8 +21,8 @@ RUN pip install --no-cache-dir fastapi==0.104.1 uvicorn==0.24.0 python-multipart
 # Copy application code
 COPY --chown=1001:0 main.py .
 
-# Copy sample logs directory (permissions set above as root)
-COPY --chown=1001:0 sample-logs/ ./sample-logs/
+# Copy sample logs directory if it exists (permissions set above as root)
+COPY --chown=1001:0 sample-log[s]/ ./sample-logs/
 
 # Expose port
 EXPOSE 8080

@@ -622,9 +622,16 @@ def create_aap_job_from_log(log_content: str, job_name: str) -> int:
     """Parse log content and create AAP job with events"""
     global aap_next_job_id, aap_next_event_id
     
+    # Extract job_id from filename first (e.g., job_1470085.txt → 1470085)
+    # This takes priority over job_id parsed from log content
+    filename_job_id = None
+    filename_match = re.match(r'job_(\d+)', job_name)
+    if filename_match:
+        filename_job_id = int(filename_match.group(1))
+    
     lines = log_content.split('\n')
     events = []
-    job_id = None
+    job_id = None  # Parsed from content, but filename_job_id takes priority
     hosts = set()
     tasks = set()
     start_time = None
@@ -698,9 +705,13 @@ def create_aap_job_from_log(log_content: str, job_name: str) -> int:
     has_failures = any(e["failed"] for e in events)
     status = "failed" if has_failures else "successful"
     
+    # Determine final job_id: filename > content > auto-increment
+    # Priority: filename_job_id (from job_XXXXX.txt) > job_id (parsed from content) > aap_next_job_id
+    final_job_id = filename_job_id or job_id or aap_next_job_id
+    
     # Create AAP job
     job = {
-        "id": job_id or aap_next_job_id,
+        "id": final_job_id,
         "name": job_name,
         "status": status,
         "started": start_time,
@@ -715,14 +726,14 @@ def create_aap_job_from_log(log_content: str, job_name: str) -> int:
         "modified": end_time or datetime.now(timezone.utc).isoformat(),
         "job_type": "run",
         "launch_type": "manual",
-        "url": f"/api/v2/jobs/{job_id or aap_next_job_id}/"
+        "url": f"/api/v2/jobs/{final_job_id}/"
     }
     
-    final_job_id = job_id or aap_next_job_id
     aap_jobs_db[final_job_id] = job
     aap_job_events_db[final_job_id] = events
     
-    if job_id is None:
+    # Only increment auto-id if we didn't use filename or content job_id
+    if filename_job_id is None and job_id is None:
         aap_next_job_id += 1
     
     return final_job_id

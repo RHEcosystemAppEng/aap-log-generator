@@ -78,6 +78,9 @@ data/generated/*
 logs/output.log
 logs/*.log
 
+# Data
+data/logs/*
+
 # Container runtime
 .podman/
 .docker/

@@ -464,7 +464,7 @@ def _parse_ansible_output(line: str, line_number: int) -> Optional[Dict[str, Any
                 "event_display": line,
                 "host": host,
                 "task": None,
-                "stdout": extra.strip() if extra else "",
+                "stdout": line,
                 "level": "ERROR" if status in ["failed", "fatal"] else "INFO",
                 "failed": status in ["failed", "fatal"],
                 "changed": changed,
